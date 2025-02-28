@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 django-environ = "*"
 psycopg2 = "*"
+django-rest-framework = "*"
+pillow = "*"
 
 [dev-packages]
 

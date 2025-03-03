@@ -42,3 +42,5 @@ db.sqlite3
 # PyCharm
 .idea/
 
+# Media File
+media/

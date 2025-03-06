@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from music.models import Album, Genre, Song
-from users.serializers import UserSerializer
 
 User = get_user_model()
 
@@ -13,12 +12,13 @@ class GenreSerializer(serializers.ModelSerializer):
 class SongSerializer(serializers.ModelSerializer):
     genres = serializers.ListField(child=serializers.CharField(), required=False, write_only=True)
     featured_artists = serializers.ListField(child=serializers.UUIDField(), required=False, write_only=True)
+    featured_artists_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Song
         fields = [
-            'id', 'title', 'song_cover_image', 'album', 'featured_artists', 'duration', 'category', 'lyrics', 'genres', 'audio_file',
-            'plays_count', 'description','created_at', 'released_date']
+            'id', 'title', 'song_cover_image', 'album', 'featured_artists', 'featured_artists_details', 'duration', 'category',
+            'lyrics', 'genres', 'audio_file', 'plays_count', 'description','created_at', 'released_date']
         extra_kwargs = {
             'album': {'required': False}
         }
@@ -85,6 +85,10 @@ class SongSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def get_featured_artists_details(self, obj):
+        from users.serializers import UserSerializer
+        return UserSerializer(obj.featured_artists.all(), many=True).data
+
 
 class AlbumSerializer(serializers.ModelSerializer):
     genres = serializers.ListField(child=serializers.CharField(), required=False, write_only=True)
@@ -129,15 +133,20 @@ class AlbumSerializer(serializers.ModelSerializer):
 class AlbumResponseSerializer(serializers.ModelSerializer):
     genres = GenreSerializer(many=True, read_only=True)
     songs = SongSerializer(many=True, read_only=True)
+    artist = serializers.SerializerMethodField()
 
     class Meta:
         model = Album
         fields = [
             'id', 'title', 'artist', 'description', 'release_date', 'cover_image', 'total_songs', 'genres', 'songs']
 
+    def get_artist(self, obj):
+        from users.serializers import UserSerializer
+        return UserSerializer(obj.artist).data
+
 class SongResponseSerializer(serializers.ModelSerializer):
     genre_details = GenreSerializer(many=True, read_only=True, source='genre')
-    featured_artists_details = UserSerializer(many=True, read_only=True)
+    featured_artists_details = serializers.SerializerMethodField()
     album_details = AlbumSerializer(source='album', read_only=True)
 
     class Meta:
@@ -145,3 +154,7 @@ class SongResponseSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'song_cover_image', 'album', 'album_details', 'featured_artists_details', 'duration', 'category', 'lyrics', 'genre_details',
             'audio_file', 'plays_count', 'description', 'created_at', 'released_date']
+
+    def get_featured_artists_details(self, obj):
+        from users.serializers import UserSerializer
+        return UserSerializer(obj.featured_artists.all(), many=True).data

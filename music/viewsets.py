@@ -1,4 +1,3 @@
-from django.core.serializers import serialize
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -20,9 +19,8 @@ class AlbumViewSet(ModelViewSet):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = AlbumSerializer(instance, data=request.data, partial=partial)
+        serializer = AlbumSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         album = serializer.save()
         response_serializer = AlbumResponseSerializer(album)
@@ -32,21 +30,20 @@ class AlbumViewSet(ModelViewSet):
 
 class SongViewSet(ModelViewSet):
     queryset = Song.objects.all()
-    serializer_class = SongSerializer
+    serializer_class = SongResponseSerializer
     permission_classes = [IsAuthenticated]
 
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = SongSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         song = serializer.save()
         response_serializer = SongResponseSerializer(song)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = SongSerializer(instance, data=request.data, partial=partial)
+        serializer = SongSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         song = serializer.save()
         response_serializer = SongResponseSerializer(song)

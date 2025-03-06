@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from django.contrib.auth.models import  Group
+
+from music.models import Album
+from music.serializers import AlbumResponseSerializer
 from users.models import UserProfile , ArtistRequest
 
 User = get_user_model()
@@ -25,10 +28,24 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    albums = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
-        fields = '__all__'
+        fields = ['id', 'user', 'albums' ,'display_name', 'bio' , 'date_of_birth' , 'created_at', 'profile_picture' , 'role']
+
+    def get_albums(self, obj):
+        """Return all albums only if the user is an artist."""
+        if obj.user.groups.filter(name="Artists").exists():
+            return AlbumResponseSerializer(Album.objects.filter(artist=obj.user), many=True).data
+        return None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not instance.user.groups.filter(name="Artists").exists():
+            data.pop("albums", None)
+        return data
+
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()

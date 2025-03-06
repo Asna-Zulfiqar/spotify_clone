@@ -1,11 +1,16 @@
 from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.models import Group
+from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from users.serializers import UserSerializer, LoginSerializer, UserProfileSerializer
+from users.models import ArtistRequest
+from users.permission import IsAdmin
+from users.serializers import UserSerializer, LoginSerializer, UserProfileSerializer, ArtistRequestResponseSerializer, \
+    ArtistRequestSerializer
 
 User = get_user_model()
 
@@ -46,9 +51,8 @@ class UserViewSet(ModelViewSet):
     def view_profile(self, request):
         user = request.user
         profile = user.user_profile
-        user_data = UserSerializer(user).data
         profile_data = UserProfileSerializer(profile).data
-        return Response({'user': user_data, 'profile': profile_data})
+        return Response(status=status.HTTP_200_OK, data=profile_data)
 
     @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated])
     def update_profile(self, request):
@@ -58,3 +62,72 @@ class UserViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
+
+
+class ArtistRequestViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action"""
+        if self.action in ['list', 'retrieve', 'approve', 'reject']:
+            return ArtistRequestResponseSerializer
+        return ArtistRequestSerializer
+
+    def get_queryset(self):
+        """Users see their own requests, admins see all"""
+        if self.request.user.is_staff:
+            return ArtistRequest.objects.all()
+        return ArtistRequest.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        description = request.data.get('description', '')
+
+        if ArtistRequest.objects.filter(user=user, status='pending').exists():
+            return Response({"message": "You already have a pending request."}, status=400)
+
+        artist_request = ArtistRequest.objects.create(user=user, description=description , status='Pending')
+        return Response(ArtistRequestResponseSerializer(artist_request).data, status=201)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
+    def update_status(self, request, pk=None):
+        """
+        Admin updates the status of an artist request.
+        """
+        artist_request = self.get_object()
+        if artist_request.status != 'Pending':
+            return Response(
+                {"error": "This request has already been processed."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        new_status = request.data.get("status")
+        if new_status not in ["Approved", "Rejected"]:
+            return Response(
+                {"error": "Invalid status. Use 'Approved' or 'Rejected'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_status == "Approved":
+            user = artist_request.user
+
+            user.user_profile.role = 'artists'
+            user.user_profile.save()
+
+            users_group = Group.objects.get(name="Users")
+            artists_group, _ = Group.objects.get_or_create(name="Artists")
+            user.groups.remove(users_group)
+            user.groups.add(artists_group)
+
+            artist_request.status = "Approved"
+            artist_request.is_approved = True
+            artist_request.approved_at = now()
+        else:
+            artist_request.status = "Rejected"
+
+        artist_request.save()
+
+        return Response(
+            ArtistRequestResponseSerializer(artist_request).data,
+            status=status.HTTP_200_OK
+        )

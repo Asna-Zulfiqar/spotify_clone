@@ -27,3 +27,21 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
+
+
+class ArtistRequest(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="artist_requests")
+    description = models.TextField(blank=True, null=True)
+    STATUS_CHOICES = [
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+        ('Pending', 'Pending'),
+    ]
+    status = models.CharField(choices=STATUS_CHOICES , max_length=50)
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Artist Request - {self.user.username}"

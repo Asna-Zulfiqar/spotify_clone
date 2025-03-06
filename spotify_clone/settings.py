@@ -47,15 +47,19 @@ INSTALLED_APPS = [
 ]
 
 LOCAL_APPS = [
-    'users'
+    'users',
+    'music',
 ]
 
 THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
+    'debug_toolbar',
 ]
 INSTALLED_APPS += LOCAL_APPS + THIRD_PARTY_APPS
+
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -159,3 +163,13 @@ AUTH_USER_MODEL = 'users.Users'
 # Image Uploads Settings
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# Debug Toolbar Setting
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+    'RESULTS_CACHE_SIZE': 100,
+}

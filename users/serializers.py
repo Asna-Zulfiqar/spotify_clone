@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from django.contrib.auth.models import  Group
-from users.models import UserProfile
+from users.models import UserProfile , ArtistRequest
 
 User = get_user_model()
 
@@ -24,10 +24,22 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
     class Meta:
         model = UserProfile
-        fields = ['id', 'display_name', 'date_of_birth', 'bio', 'profile_picture', 'role']
+        fields = '__all__'
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+class ArtistRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArtistRequest
+        fields = ['id', 'user', 'description']
+
+class ArtistRequestResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArtistRequest
+        fields = ['id', 'user', 'description' , 'status' , 'is_approved' , 'created_at', 'approved_at']

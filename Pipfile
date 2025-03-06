@@ -8,6 +8,7 @@ django-environ = "*"
 psycopg2 = "*"
 django-rest-framework = "*"
 pillow = "*"
+django-debug-toolbar = "*"
 
 [dev-packages]
 

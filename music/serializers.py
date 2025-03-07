@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
-from music.models import Album, Genre, Song
+from music.models import Album, Genre, Song, LikeSong, UnlikeSong
 
 User = get_user_model()
 
@@ -28,38 +29,39 @@ class SongSerializer(serializers.ModelSerializer):
         featured_artist_ids = validated_data.pop('featured_artists', [])
         album = validated_data.get('album')
 
-        song = Song.objects.create(**validated_data)
+        with transaction.atomic():
+            song = Song.objects.create(**validated_data)
 
-        if genre_names:
-            genres = []
-            for genre_name in genre_names:
-                genre, _ = Genre.objects.get_or_create(name=genre_name)
-                genres.append(genre)
+            if genre_names:
+                genres = []
+                for genre_name in genre_names:
+                    genre, _ = Genre.objects.get_or_create(name=genre_name)
+                    genres.append(genre)
 
-            song.genre.set(genres)
+                song.genre.set(genres)
 
-        if featured_artist_ids:
-            featured_artists = []
-            for artist in featured_artist_ids:
+            if featured_artist_ids:
+                featured_artists = []
+                for artist in featured_artist_ids:
+                    try:
+                        artist = User.objects.get(id=artist)
+                        featured_artists.append(artist)
+                    except User.DoesNotExist:
+                        song.delete()
+                        raise serializers.ValidationError(
+                            f"Artist with UUID '{artist}' does not exist"
+                        )
+
+                song.featured_artists.set(featured_artists)
+
+            if album:
                 try:
-                    artist = User.objects.get(id=artist)
-                    featured_artists.append(artist)
-                except User.DoesNotExist:
+                    album_instance = Album.objects.get(id=album.id)
+                    album_instance.total_songs += 1
+                    album_instance.save()
+                except Album.DoesNotExist:
                     song.delete()
-                    raise serializers.ValidationError(
-                        f"Artist with UUID '{artist}' does not exist"
-                    )
-
-            song.featured_artists.set(featured_artists)
-
-        if album:
-            try:
-                album_instance = Album.objects.get(id=album.id)
-                album_instance.total_songs += 1
-                album_instance.save()
-            except Album.DoesNotExist:
-                song.delete()
-                raise serializers.ValidationError("Album not found")
+                    raise serializers.ValidationError("Album not found")
         return song
 
     def update(self, instance, validated_data):
@@ -103,42 +105,24 @@ class AlbumSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        genre_names = validated_data.pop('genres', [])
         album = Album.objects.create(**validated_data)
-
-        if genre_names:
-            genres = []
-            for genre_name in genre_names:
-                genre, _ = Genre.objects.get_or_create(name=genre_name)
-                genres.append(genre)
-
-            album.genres.set(genres)
-
         return album
 
     def update(self, instance, validated_data):
-        genre_names = validated_data.pop('genres', [])
-
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-
-        for genre_name in genre_names:
-            genre, _ = Genre.objects.get_or_create(name=genre_name)
-            instance.genres.add(genre)
-
         return instance
 
 
 class AlbumResponseSerializer(serializers.ModelSerializer):
-    genres = GenreSerializer(many=True, read_only=True)
     songs = SongSerializer(many=True, read_only=True)
     artist = serializers.SerializerMethodField()
 
     class Meta:
         model = Album
         fields = [
-            'id', 'title', 'artist', 'description', 'release_date', 'cover_image', 'total_songs', 'genres', 'songs']
+            'id', 'title', 'artist', 'description', 'release_date', 'cover_image', 'total_songs', 'songs']
 
     def get_artist(self, obj):
         from users.serializers import UserSerializer
@@ -152,9 +136,24 @@ class SongResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
         fields = [
-            'id', 'title', 'song_cover_image', 'album', 'album_details', 'featured_artists_details', 'duration', 'category', 'lyrics', 'genre_details',
-            'audio_file', 'plays_count', 'description', 'created_at', 'released_date']
+            'id', 'title', 'song_cover_image', 'album', 'album_details', 'featured_artists_details', 'duration', 'category', 'likes', 'dislikes',
+            'lyrics', 'genre_details', 'audio_file', 'plays_count', 'description', 'created_at', 'released_date']
 
     def get_featured_artists_details(self, obj):
         from users.serializers import UserSerializer
         return UserSerializer(obj.featured_artists.all(), many=True).data
+
+class LikeSongSerializer(serializers.ModelSerializer):
+    song = serializers.PrimaryKeyRelatedField( queryset=Song.objects.all(), required=True, error_messages={"does_not_exist": "Song not found with this id"})
+
+    class Meta:
+        model = LikeSong
+        fields = ['song']
+
+
+class UnlikeSongSerializer(serializers.ModelSerializer):
+    song = serializers.PrimaryKeyRelatedField(queryset=Song.objects.all(), required=True, error_messages={"does_not_exist": "Song not found with this id"})
+
+    class Meta:
+        model = UnlikeSong
+        fields = ['song']

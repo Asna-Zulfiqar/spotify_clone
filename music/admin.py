@@ -9,6 +9,9 @@ class AlbumAdmin(admin.ModelAdmin):
 admin.site.register(Album, AlbumAdmin)
 
 class SongAdmin(admin.ModelAdmin):
-    list_display = ['title', 'album', 'category', 'plays_count', 'released_date']
+    list_display = ['title', 'album', 'category', 'plays_count', 'released_date' , 'likes' , 'dislikes']
 
 admin.site.register(Song, SongAdmin)
+
+admin.site.register(LikeSong)
+admin.site.register(UnlikeSong)

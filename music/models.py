@@ -21,7 +21,6 @@ class Album(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     cover_image = models.ImageField(upload_to="album_covers/", blank=True, null=True)
     total_songs = models.PositiveIntegerField(default=0)
-    genres = models.ManyToManyField(Genre, blank=True)
 
     def __str__(self):
         return self.title
@@ -44,9 +43,26 @@ class Song(models.Model):
     audio_file = models.FileField(upload_to="songs/audios/", blank=False, null=False)
     plays_count = models.PositiveIntegerField(default=0)
     description = models.TextField(blank=True, null=True)
+    likes = models.IntegerField(default=0)
+    dislikes = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     released_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} - {self.album.artist.username if self.album and self.album.artist else 'Unknown Artist'}"
 
+class LikeSong(models.Model):
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='song_likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='song_likes')
+
+    def __str__(self):
+        return f"{self.user.username} liked  {self.song.title}"
+
+
+
+class UnlikeSong(models.Model):
+    song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='song_unlikes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='song_unlikes')
+
+    def __str__(self):
+        return f"{self.user.username} unliked  {self.song.title}"

@@ -49,7 +49,7 @@ class Song(models.Model):
     released_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.title} - {self.album.artist.username if self.album and self.album.artist else 'Unknown Artist'}"
+        return f"{self.title}"
 
 class LikeSong(models.Model):
     song = models.ForeignKey(Song, on_delete=models.CASCADE, related_name='song_likes')

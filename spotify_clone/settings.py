@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 LOCAL_APPS = [
     'users',
     'music',
+    'playlists',
 ]
 
 THIRD_PARTY_APPS = [

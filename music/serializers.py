@@ -18,7 +18,7 @@ class SongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
         fields = [
-            'id', 'title', 'song_cover_image', 'album', 'featured_artists', 'featured_artists_details', 'duration', 'category',
+            'id', 'title', 'song_cover_image', 'album', 'featured_artists', 'featured_artists_details', 'duration',
             'lyrics', 'genres', 'audio_file', 'plays_count', 'description','created_at', 'released_date']
         extra_kwargs = {
             'album': {'required': False}
@@ -136,7 +136,7 @@ class SongResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
         fields = [
-            'id', 'title', 'song_cover_image', 'album', 'album_details', 'featured_artists_details', 'duration', 'category', 'likes', 'dislikes',
+            'id', 'title', 'song_cover_image', 'album', 'album_details', 'featured_artists_details', 'duration', 'likes', 'dislikes',
             'lyrics', 'genre_details', 'audio_file', 'plays_count', 'description', 'created_at', 'released_date']
 
     def get_featured_artists_details(self, obj):

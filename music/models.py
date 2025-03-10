@@ -33,11 +33,6 @@ class Song(models.Model):
     album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="songs" , null=True, blank=True)
     featured_artists = models.ManyToManyField(User, blank=True, related_name='featured_artists')
     duration = models.DurationField()
-    CATEGORY_CHOICES = [
-        ('Premium', 'Premium'),
-        ('Free', 'Free'),
-    ]
-    category = models.CharField(choices=CATEGORY_CHOICES, max_length=255, default='Free')
     lyrics = models.TextField(blank=True, null=True)
     genre = models.ManyToManyField(Genre, blank=True , related_name='albums')
     audio_file = models.FileField(upload_to="songs/audios/", blank=False, null=False)

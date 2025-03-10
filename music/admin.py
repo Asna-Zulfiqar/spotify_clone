@@ -9,7 +9,7 @@ class AlbumAdmin(admin.ModelAdmin):
 admin.site.register(Album, AlbumAdmin)
 
 class SongAdmin(admin.ModelAdmin):
-    list_display = ['title', 'album', 'category', 'plays_count', 'released_date' , 'likes' , 'dislikes']
+    list_display = ['title', 'album', 'plays_count', 'released_date' , 'likes' , 'dislikes']
 
 admin.site.register(Song, SongAdmin)
 

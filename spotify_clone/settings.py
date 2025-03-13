@@ -56,6 +56,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'debug_toolbar',
+    'djstripe',
 ]
 INSTALLED_APPS += LOCAL_APPS + THIRD_PARTY_APPS
 
@@ -174,3 +175,16 @@ DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda request: True,
     'RESULTS_CACHE_SIZE': 100,
 }
+
+# Stripe Setting
+STRIPE_TEST_PUBLIC_KEY = env.str("STRIPE_TEST_PUBLIC_KEY", "")
+STRIPE_TEST_SECRET_KEY = env.str("STRIPE_TEST_SECRET_KEY","")
+STRIPE_LIVE_MODE = env.bool("STRIPE_LIVE_MODE",default=False)
+DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
+
+PRODUCT_ID_MONTHLY = env.str("PRODUCT_ID_MONTHLY","")
+PRODUCT_ID_YEARLY = env.str("PRODUCT_ID_YEARLY", "")
+PRODUCT_ID_WEEKLY = env.str("PRODUCT_ID_WEEKLY", "")
+
+STRIPE_PROFILE_REFRESH_LINK = "https://686e-119-154-156-82.ngrok-free.app"
+STRIPE_PROFILE_REDIRECT_LINK = "https://686e-119-154-156-82.ngrok-free.app"

@@ -1,9 +1,13 @@
 import uuid
 from django.contrib.auth.models import User, AbstractUser
 from django.db import models
+from djstripe.models import Customer, Account
+
 
 class Users(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    stripe_customer_id = models.OneToOneField(Customer, null=True, blank=True, on_delete=models.SET_NULL)
+    stripe_account = models.OneToOneField(Account, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.username

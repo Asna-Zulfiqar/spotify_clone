@@ -50,18 +50,19 @@ LOCAL_APPS = [
     'users',
     'music',
     'playlists',
+    'payments'
 ]
 
 THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
-    'debug_toolbar',
+    # 'debug_toolbar',
     'djstripe',
 ]
 INSTALLED_APPS += LOCAL_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -182,9 +183,15 @@ STRIPE_TEST_SECRET_KEY = env.str("STRIPE_TEST_SECRET_KEY","")
 STRIPE_LIVE_MODE = env.bool("STRIPE_LIVE_MODE",default=False)
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
-PRODUCT_ID_MONTHLY = env.str("PRODUCT_ID_MONTHLY","")
-PRODUCT_ID_YEARLY = env.str("PRODUCT_ID_YEARLY", "")
-PRODUCT_ID_WEEKLY = env.str("PRODUCT_ID_WEEKLY", "")
+PRICE_ID_MONTHLY = env.str("PRICE_ID_MONTHLY","")
+PRICE_ID_YEARLY = env.str("PRICE_ID_YEARLY", "")
+PRICE_ID_WEEKLY = env.str("PRICE_ID_WEEKLY", "")
+
+STRIPE_PRICE_IDS = {
+    "monthly": PRICE_ID_MONTHLY,
+    "yearly": PRICE_ID_YEARLY,
+    "weekly": PRICE_ID_WEEKLY,
+}
 
 STRIPE_PROFILE_REFRESH_LINK = "https://686e-119-154-156-82.ngrok-free.app"
 STRIPE_PROFILE_REDIRECT_LINK = "https://686e-119-154-156-82.ngrok-free.app"

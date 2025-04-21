@@ -50,7 +50,8 @@ LOCAL_APPS = [
     'users',
     'music',
     'playlists',
-    'payments'
+    'payments',
+    'home'
 ]
 
 THIRD_PARTY_APPS = [

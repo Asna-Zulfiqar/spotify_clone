@@ -10,7 +10,7 @@ from rest_framework.viewsets import ModelViewSet
 from users.models import ArtistRequest
 from users.permission import IsAdmin
 from users.serializers import UserSerializer, LoginSerializer, UserProfileSerializer, ArtistRequestResponseSerializer, \
-    ArtistRequestSerializer
+    ArtistRequestSerializer, UpdatePasswordSerializer
 
 User = get_user_model()
 
@@ -44,7 +44,7 @@ class UserViewSet(ModelViewSet):
 
         if user is not None:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key, 'user': UserSerializer(user).data})
+            return Response({'message':'Login Successfully', 'token': token.key, 'user': UserSerializer(user).data})
         return Response({'error': 'Invalid Credentials'}, status=400)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
@@ -62,6 +62,26 @@ class UserViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
+
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def update_password(self, request):
+        serializer = UpdatePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
+            user.set_password(serializer.validated_data["new_password"])
+            user.save()
+            return Response({"detail": "Password updated successfully."},status=status.HTTP_200_OK,)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def logout(self, request):
+        user = request.user
+        token = Token.objects.get(user=user)
+        token.delete()
+        return Response({"details":"Logout Successfully"}, status=status.HTTP_200_OK)
+
 
 
 class ArtistRequestViewSet(ModelViewSet):

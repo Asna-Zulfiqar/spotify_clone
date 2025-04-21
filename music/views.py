@@ -2,8 +2,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from music.models import LikeSong, UnlikeSong
-from music.serializers import LikeSongSerializer, UnlikeSongSerializer
+from music.models import LikeSong, UnlikeSong, Follow
+from music.serializers import LikeSongSerializer, UnlikeSongSerializer, FollowUserSerializer
 from music.utils import update_counts
 
 
@@ -47,3 +47,35 @@ class UnlikeSongView(APIView):
 
         update_counts(song)
         return Response({'message': 'You have successfully unliked this song.'})
+
+class FollowUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = FollowUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        followed = serializer.validated_data['followed']
+        user = request.user
+
+        if Follow.objects.filter(follower=user, followed=followed).exists():
+            return Response({'message': 'You have already Followed this User.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        Follow.objects.create(follower=user, followed=followed)
+
+        return Response({'message': 'You have successfully Followed this User.'}, status=status.HTTP_200_OK)
+
+class UnFollowUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = FollowUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        followed = serializer.validated_data['followed']
+        user = request.user
+
+        try:
+            follow_instance = Follow.objects.get(follower=user, followed=followed)
+            follow_instance.delete()
+            return Response({'message': 'User unfollowed successfully.'}, status=status.HTTP_200_OK)
+        except Follow.DoesNotExist:
+            return Response({'message': 'You are not following this user.'}, status=status.HTTP_400_BAD_REQUEST)

@@ -18,7 +18,7 @@ class PlaylistViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = PlaylistDetailSerializer(queryset, many=True)
+        serializer = PlaylistSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -26,6 +26,11 @@ class PlaylistViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = PlaylistDetailSerializer(instance)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
     def add_or_remove_song(self, request, *args, **kwargs):

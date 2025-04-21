@@ -125,8 +125,8 @@ class AlbumResponseSerializer(serializers.ModelSerializer):
             'id', 'title', 'artist', 'description', 'release_date', 'cover_image', 'total_songs', 'songs']
 
     def get_artist(self, obj):
-        from users.serializers import UserSerializer
-        return UserSerializer(obj.artist).data
+        from users.serializers import ArtistSerializer
+        return ArtistSerializer(obj.artist).data
 
 class SongResponseSerializer(serializers.ModelSerializer):
     genre_details = GenreSerializer(many=True, read_only=True, source='genre')
@@ -157,3 +157,11 @@ class UnlikeSongSerializer(serializers.ModelSerializer):
     class Meta:
         model = UnlikeSong
         fields = ['song']
+
+
+class FollowUserSerializer(serializers.ModelSerializer):
+    followed = serializers.PrimaryKeyRelatedField( queryset=User.objects.all(), required=True, error_messages={"does_not_exist": "User not found with this id"})
+
+    class Meta:
+        model = LikeSong
+        fields = ['followed']

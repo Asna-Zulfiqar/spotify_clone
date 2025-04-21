@@ -104,9 +104,3 @@ class PaymentViewSet(ModelViewSet):
 
         response = list_my_subscriptions(customer_id)
         return response
-
-
-
-
-
-

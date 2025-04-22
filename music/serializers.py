@@ -88,8 +88,8 @@ class SongSerializer(serializers.ModelSerializer):
         return instance
 
     def get_featured_artists_details(self, obj):
-        from users.serializers import UserSerializer
-        return UserSerializer(obj.featured_artists.all(), many=True).data
+        from users.serializers import UserResponseSerializer
+        return UserResponseSerializer(obj.featured_artists.all(), many=True).data
 
 
 class AlbumSerializer(serializers.ModelSerializer):
@@ -125,8 +125,8 @@ class AlbumResponseSerializer(serializers.ModelSerializer):
             'id', 'title', 'artist', 'description', 'release_date', 'cover_image', 'total_songs', 'songs']
 
     def get_artist(self, obj):
-        from users.serializers import ArtistSerializer
-        return ArtistSerializer(obj.artist).data
+        from users.serializers import UserResponseSerializer
+        return UserResponseSerializer(obj.artist).data
 
 class SongResponseSerializer(serializers.ModelSerializer):
     genre_details = GenreSerializer(many=True, read_only=True, source='genre')
@@ -144,7 +144,8 @@ class SongResponseSerializer(serializers.ModelSerializer):
         return UserSerializer(obj.featured_artists.all(), many=True).data
 
 class LikeSongSerializer(serializers.ModelSerializer):
-    song = serializers.PrimaryKeyRelatedField( queryset=Song.objects.all(), required=True, error_messages={"does_not_exist": "Song not found with this id"})
+    song = serializers.PrimaryKeyRelatedField( queryset=Song.objects.all(), required=True,
+                                               error_messages={"does_not_exist": "Song not found with this id"})
 
     class Meta:
         model = LikeSong
@@ -152,7 +153,8 @@ class LikeSongSerializer(serializers.ModelSerializer):
 
 
 class UnlikeSongSerializer(serializers.ModelSerializer):
-    song = serializers.PrimaryKeyRelatedField(queryset=Song.objects.all(), required=True, error_messages={"does_not_exist": "Song not found with this id"})
+    song = serializers.PrimaryKeyRelatedField(queryset=Song.objects.all(), required=True,
+                                              error_messages={"does_not_exist": "Song not found with this id"})
 
     class Meta:
         model = UnlikeSong
@@ -160,7 +162,8 @@ class UnlikeSongSerializer(serializers.ModelSerializer):
 
 
 class FollowUserSerializer(serializers.ModelSerializer):
-    followed = serializers.PrimaryKeyRelatedField( queryset=User.objects.all(), required=True, error_messages={"does_not_exist": "User not found with this id"})
+    followed = serializers.PrimaryKeyRelatedField( queryset=User.objects.all(), required=True,
+                                                   error_messages={"does_not_exist": "User not found with this id"})
 
     class Meta:
         model = LikeSong

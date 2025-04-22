@@ -10,18 +10,18 @@ from rest_framework.viewsets import ModelViewSet
 from users.models import ArtistRequest
 from users.permission import IsAdmin
 from users.serializers import UserSerializer, LoginSerializer, UserProfileSerializer, ArtistRequestResponseSerializer, \
-    ArtistRequestSerializer, UpdatePasswordSerializer
+    ArtistRequestSerializer, UpdatePasswordSerializer, UserResponseSerializer
 
 User = get_user_model()
 
 class UserViewSet(ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.all().select_related('user_profile')
     permission_classes = [AllowAny]
     serializer_class = UserSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = UserSerializer(queryset, many=True)
+        serializer = UserResponseSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -88,7 +88,7 @@ class ArtistRequestViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        """Return appropriate serializer based on action"""
+        """Return the appropriate serializer based on action"""
         if self.action in ['list', 'retrieve', 'approve', 'reject']:
             return ArtistRequestResponseSerializer
         return ArtistRequestSerializer

@@ -15,3 +15,4 @@ admin.site.register(Song, SongAdmin)
 
 admin.site.register(LikeSong)
 admin.site.register(UnlikeSong)
+admin.site.register(Follow)

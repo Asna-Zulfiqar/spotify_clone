@@ -1,3 +1,4 @@
 from django.contrib import admin
+from home.models import RecentlyPlayed
 
-# Register your models here.
+admin.site.register(RecentlyPlayed)

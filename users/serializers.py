@@ -91,12 +91,21 @@ class UpdatePasswordSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
-class ArtistSerializer(serializers.ModelSerializer):
+class UserResponseSerializer(serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'display_name', 'email']
+        fields = ['id', 'username', 'display_name', 'email', 'profile_picture']
 
     def get_display_name(self, obj):
         return obj.user_profile.display_name if hasattr(obj, 'user_profile') else obj.username
+
+    def get_profile_picture(self, obj):
+        if hasattr(obj, 'user_profile') and obj.user_profile.profile_picture:
+            try:
+                return obj.user_profile.profile_picture.url
+            except ValueError:
+                return None
+        return None

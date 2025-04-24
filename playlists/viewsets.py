@@ -60,6 +60,33 @@ class PlaylistViewSet(ModelViewSet):
         playlist.delete()
         return Response({'message': 'Playlist deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def clone_playlist(self, request):
+        user = request.user
+        playlist_id = request.data.get('playlist_id')
+
+        if not playlist_id:
+            return Response({'detail': 'playlist_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            original = Playlist.objects.get(id=playlist_id)
+        except Playlist.DoesNotExist:
+            return Response({'detail': 'Playlist not found or not public.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if original.user == user:
+            return Response({'detail': 'You already own this playlist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        new_playlist = Playlist.objects.create(
+            user=user,
+            name=f"{original.name}",
+            total_songs=original.total_songs,
+            privacy='public'
+        )
+        new_playlist.songs.set(original.songs.all())
+
+        serializer = PlaylistSerializer(new_playlist)
+        return Response({'details':'Playlist Successfully Cloned', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+
 
 
 

@@ -5,9 +5,10 @@ from users.serializers import UserSerializer
 
 
 class PlaylistSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Playlist
-        fields = ['id' , 'name' , 'privacy', 'total_songs']
+        fields = ['id' ,'user', 'name' , 'privacy', 'total_songs']
 
 class PlaylistDetailSerializer(serializers.ModelSerializer):
     songs = serializers.SerializerMethodField()

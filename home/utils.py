@@ -125,6 +125,7 @@ def explore_page_recommendations(user):
     )
 
     top_genre_ids = [genre['genre__id'] for genre in top_genres]
+
     # Made For You Section
     if liked_ids:
         made_for_you = (

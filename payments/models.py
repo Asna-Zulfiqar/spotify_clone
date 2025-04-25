@@ -5,7 +5,7 @@ User = get_user_model()
 
 
 class PaymentLogs(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='payment_logs')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_logs')
     amount = models.FloatField(null=True)
     details = models.CharField(max_length=100, null=True)
     is_deleted = models.BooleanField(default=False)

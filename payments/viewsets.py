@@ -86,12 +86,11 @@ class PaymentViewSet(ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def cancel_subscription(self, request):
-        user = request.user
         subscription_id = request.data.get("subscription_id")
         if not subscription_id:
             return Response({"error": "Subscription ID is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        response = unsubscribe(user, subscription_id)
+        response = unsubscribe(subscription_id)
         return response
 
     @action(detail=False, methods=['get'])

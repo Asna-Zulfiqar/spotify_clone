@@ -3,10 +3,13 @@ from django.conf import settings
 from djstripe.models import PaymentMethod
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from payments.serializers import PaymentMethodSerializer
+
+from payments.models import PaymentLogs
+from payments.serializers import PaymentMethodSerializer, PaymentLogSerializer
 from payments.utils import add_stripe_account, add_payment_method, get_stripe_account, subscribe, unsubscribe, \
     list_my_subscriptions
 
@@ -103,3 +106,14 @@ class PaymentViewSet(ModelViewSet):
 
         response = list_my_subscriptions(customer_id)
         return response
+
+
+class PaymentLogListView(ListAPIView):
+    serializer_class = PaymentLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return PaymentLogs.objects.filter(
+            user=self.request.user,
+            is_deleted=False
+        )

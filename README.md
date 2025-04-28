@@ -1,4 +1,4 @@
-# 🎵 Spotify Clone Backend
+# 🎵 Spotify Clone (Backend)
 
 This is a Spotify Clone backend built with Django REST Framework and PostgreSQL, replicating core music streaming functionalities like songs, albums, artists, playlists, search, user subscriptions, and recommendations.
 It also integrates Stripe Connect for artist payments.

@@ -9,9 +9,7 @@ from users.models import UserProfile , ArtistRequest
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    """
-        Serializer for Registering new User.
-    """
+    
     class Meta:
         model = User
         fields = ('id', 'email', 'password')

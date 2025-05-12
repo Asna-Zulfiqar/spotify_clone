@@ -4,7 +4,7 @@ from django.db.models import Count,F, Sum
 from django.utils import timezone
 from rest_framework.response import Response
 from home.models import RecentlyPlayed
-from music.models import Song, Album, LikeSong, UnlikeSong
+from music.models import Song, Album, LikeSong, UnlikeSong, Genre
 from music.serializers import SongSerializer, AlbumResponseSerializer, AlbumSerializer
 from playlists.models import Playlist
 from playlists.serializers import PlaylistSerializer
@@ -179,6 +179,7 @@ def explore_page_recommendations(user):
             'title': 'Recently Played Playlists',
             'items': PlaylistSerializer(recent_playlists, many=True).data
         }
+
     # === TRENDING CONTENT ===
 
     # Popular Albums
@@ -243,6 +244,49 @@ def explore_page_recommendations(user):
         'title': 'Popular Radio',
         'items': PlaylistSerializer(trending_playlists, many=True).data
     }
+
+    # === ADDITIONAL DATA ===
+
+    # Total Playlists Count
+    total_playlists = Playlist.objects.filter(user=user).count()
+    explore['total_playlists'] = total_playlists
+
+    # Recently Played Today Count
+    today = timezone.now().date()
+    recently_played_today = RecentlyPlayed.objects.filter(user=user, played_at__date=today).count()
+    explore['recently_played_today'] = recently_played_today
+
+    # Top Genre Based on Recently Played (Percentage)
+    recent_songs_today = [entry.song for entry in recently_played if entry.song and entry.played_at.date() == today]
+    if recent_songs_today:
+        recent_genre_counts = {}
+        for song in recent_songs_today:
+            for genre in song.genre.all():
+                recent_genre_counts[genre.id] = recent_genre_counts.get(genre.id, 0) + 1
+
+        total_recent_genres = sum(recent_genre_counts.values())
+        top_genre_id = max(recent_genre_counts, key=recent_genre_counts.get)
+        top_genre_percentage = (recent_genre_counts[top_genre_id] / total_recent_genres) * 100
+        top_genre = Genre.objects.get(id=top_genre_id)
+
+        explore['top_genre_today'] = {
+            'genre': top_genre.name,
+            'percentage': round(top_genre_percentage, 2)
+        }
+
+    # Featured Album (Most Liked and Played)
+    featured_album = (
+        Album.objects
+        .annotate(total_likes=Sum('songs__likes'), total_plays=Sum('songs__plays_count'))
+        .order_by('-total_likes', '-total_plays')
+        .first()
+    )
+
+    if featured_album:
+        explore['featured_album'] = {
+            'title': 'Featured Album',
+            'details': AlbumSerializer(featured_album).data
+        }
     return Response(explore)
 
 

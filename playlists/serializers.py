@@ -8,7 +8,7 @@ class PlaylistSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Playlist
-        fields = ['id' ,'user', 'name' , 'privacy', 'total_songs']
+        fields = ['id' ,'user', 'name' , 'privacy', 'total_songs', 'cover_image', 'created_at']
 
 class PlaylistDetailSerializer(serializers.ModelSerializer):
     songs = serializers.SerializerMethodField()
@@ -16,7 +16,7 @@ class PlaylistDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Playlist
-        fields = ['id' , 'name' , 'privacy', 'total_songs', 'songs', 'user']
+        fields = ['id' , 'name' , 'cover_image', 'privacy', 'created_at', 'total_songs', 'songs', 'user']
 
     def get_songs(self, obj):
         return SongResponseSerializer(obj.songs.all(), many=True).data

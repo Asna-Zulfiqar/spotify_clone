@@ -131,7 +131,7 @@ class AlbumResponseSerializer(serializers.ModelSerializer):
 class SongResponseSerializer(serializers.ModelSerializer):
     genre_details = GenreSerializer(many=True, read_only=True, source='genre')
     featured_artists_details = serializers.SerializerMethodField()
-    album_details = AlbumSerializer(source='album', read_only=True)
+    album_details = AlbumResponseSerializer(source='album', read_only=True)
 
     class Meta:
         model = Song
@@ -140,8 +140,8 @@ class SongResponseSerializer(serializers.ModelSerializer):
             'lyrics', 'genre_details', 'audio_file', 'plays_count', 'description', 'created_at', 'released_date']
 
     def get_featured_artists_details(self, obj):
-        from users.serializers import UserSerializer
-        return UserSerializer(obj.featured_artists.all(), many=True).data
+        from users.serializers import UserResponseSerializer
+        return UserResponseSerializer(obj.featured_artists.all(), many=True).data
 
 class LikeSongSerializer(serializers.ModelSerializer):
     song = serializers.PrimaryKeyRelatedField( queryset=Song.objects.all(), required=True,
@@ -150,6 +150,17 @@ class LikeSongSerializer(serializers.ModelSerializer):
     class Meta:
         model = LikeSong
         fields = ['song']
+
+class LikeSongResponseSerializer(serializers.ModelSerializer):
+    song = SongResponseSerializer()
+    display_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LikeSong
+        fields = ['song', 'display_name']
+
+    def get_display_name(self, obj):
+        return obj.song.album.artist.user_profile.display_name
 
 
 class UnlikeSongSerializer(serializers.ModelSerializer):

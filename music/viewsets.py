@@ -1,11 +1,13 @@
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 
 from home.utils import add_to_recently_played
-from music.models import Album, Song
-from music.serializers import AlbumSerializer, AlbumResponseSerializer, SongSerializer, SongResponseSerializer
+from music.models import Album, Song, LikeSong
+from music.serializers import AlbumSerializer, AlbumResponseSerializer, SongSerializer, SongResponseSerializer, \
+    LikeSongResponseSerializer
 
 
 class AlbumViewSet(ModelViewSet):
@@ -65,4 +67,11 @@ class SongViewSet(ModelViewSet):
         song = serializer.save()
         response_serializer = SongResponseSerializer(song)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def liked_songs(self, request):
+        user = self.request.user
+        liked_songs = LikeSong.objects.filter(user=user)
+        serializer = LikeSongResponseSerializer(liked_songs, many=True)
+        return Response(serializer.data)
 

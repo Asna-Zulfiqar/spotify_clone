@@ -43,22 +43,32 @@ class PaymentViewSet(ModelViewSet):
     def list_payment_methods(self, request):
         customer = request.user.stripe_customer_id
         methods = PaymentMethod.objects.filter(customer=customer)
-        serializer = PaymentMethodSerializer(methods, many=True)
+        serializer = PaymentMethodSerializer(methods, many=True, context={"request": request})
         return Response({"methods": serializer.data})
 
     @action(detail=False, methods=['post'])
     def set_default_payment_method(self, request):
         payment_method_id = request.data.get("payment_method_id")
-        customer = request.user.stripe_customer_id
+        customer_id = request.user.stripe_customer_id
+
         try:
-            pm = PaymentMethod.objects.get(id=payment_method_id, customer=customer)
+            pm = PaymentMethod.objects.get(id=payment_method_id, customer=customer_id)
+            customer_id_str = str(customer_id)
+            payment_method_id_str = str(pm.id)
             stripe.Customer.modify(
-                customer.id,
-                invoice_settings={'default_payment_method': pm.id}
+                customer_id_str,
+                invoice_settings={
+                    'default_payment_method': payment_method_id_str
+                }
             )
             return Response({'status': 'Default payment method updated'})
         except PaymentMethod.DoesNotExist:
             return Response({'error': 'Payment method not found'}, status=404)
+        except stripe.error.StripeError as e:
+            return Response({'error': str(e)}, status=400)
+        except Exception as e:
+            print(f"Error setting default payment method: {str(e)}")
+            return Response({'error': 'An unexpected error occurred'}, status=500)
 
     @action(detail=False, methods=['post'])
     def revoke_payment_method(self, request):

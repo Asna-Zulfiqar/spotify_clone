@@ -11,6 +11,7 @@ pillow = "*"
 django-debug-toolbar = "*"
 stripe = "*"
 dj-stripe = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 

@@ -9,6 +9,7 @@ class Playlist(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE , related_name='user_playlist')
     name = models.CharField(max_length=255)
+    cover_image = models.ImageField(upload_to='playlist_covers/', blank=True, null=True)
     PRIVACY_CHOICES = [
         ('public', 'Public'),
         ('private', 'Private')
@@ -16,6 +17,7 @@ class Playlist(models.Model):
     songs = models.ManyToManyField(Song, related_name='playlists', blank=True)
     privacy = models.CharField(max_length=10, choices=PRIVACY_CHOICES, default='public')
     total_songs = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name}"

@@ -7,6 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
+from music.models import Follow
 from users.models import ArtistRequest
 from users.permission import IsAdmin
 from users.serializers import UserSerializer, LoginSerializer, UserProfileSerializer, ArtistRequestResponseSerializer, \
@@ -62,6 +64,14 @@ class UserViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def followed_users(self, request):
+        user = request.user
+        follow_qs = Follow.objects.filter(follower=user).select_related('followed')
+        followed_user_list = [f.followed for f in follow_qs]
+        serializer = UserResponseSerializer(followed_user_list, many=True, context={'request': request})
+        return Response(serializer.data)
 
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def update_password(self, request):

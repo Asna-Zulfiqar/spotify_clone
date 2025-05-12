@@ -204,24 +204,57 @@ def list_my_subscriptions(customer_id):
             "scheduled_subscriptions": []
         }
 
-        # Active subscriptions
-        active = stripe.Subscription.list(
+        # Active Subscriptions
+        active_list = stripe.Subscription.list(
             customer=customer_id,
             status="active",
             expand=["data.items.data.price"]
         )
-        for sub in active['data']:
-            subscription_data["active_subscriptions"].append(sub)
+        for sub in active_list["data"]:
+            # Take the first item (if multiple)
+            item = sub["items"]["data"][0]
+            price = item["price"]
+            subscription_data["active_subscriptions"].append({
+                "id": sub["id"],
+                "status": sub["status"],
+                "current_period_end": sub["current_period_end"],
+                "cancel_at_period_end": sub["cancel_at_period_end"],
+                "plan": {
+                    "nickname": price.get("nickname") or price["recurring"]["interval"],
+                    "amount": price["unit_amount"],
+                    "interval": price["recurring"]["interval"],
+                }
+            })
 
-        # Scheduled subscriptions
-        schedules = stripe.SubscriptionSchedule.list(customer=customer_id)
-        for sched in schedules['data']:
-            if sched['status'] in ('active', 'not_started'):
-                subscription_data["scheduled_subscriptions"].append(sched)
+        #  Scheduled Subscriptions
+        schedule_list = stripe.SubscriptionSchedule.list(customer=customer_id)
+        for sched in schedule_list["data"]:
+            if sched["status"] not in ("active", "not_started"):
+                continue
+
+            full_sched = stripe.SubscriptionSchedule.retrieve(
+                sched["id"],
+                expand=["phases.items.price"]
+            )
+            for phase in full_sched.get("phases", []):
+                for item in phase.get("items", []):
+                    price = item["price"]
+                    subscription_data["scheduled_subscriptions"].append({
+                        "id": full_sched["id"],
+                        "status": full_sched["status"],
+                        "current_phase_end": phase["end_date"],
+                        "plan": {
+                            "nickname": price.get("nickname") or price["recurring"]["interval"],
+                            "amount": price["unit_amount"],
+                            "interval": price["recurring"]["interval"],
+                        }
+                    })
 
         if not subscription_data["active_subscriptions"] and not subscription_data["scheduled_subscriptions"]:
-            return Response({"detail": "No Active or Scheduled subscriptions found."},
-                            status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "No active or scheduled subscriptions found."},
+                status=status.HTTP_200_OK
+            )
 
         return Response(subscription_data, status=status.HTTP_200_OK)
 
@@ -229,5 +262,7 @@ def list_my_subscriptions(customer_id):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        return Response({"error": f"Unexpected error: {e}"},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {"error": f"Unexpected error: {e}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
